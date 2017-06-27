@@ -1,7 +1,11 @@
 let express = require('express');
 let router = express.Router();
 let request = require('request-promise'); // using request-promise module
+let rq = require('request');
 let mongoose = require('mongoose');
+let zlib = require('zlib');
+let util = require('util');
+let stream = require('stream');
 
 let Repo = require('../models/repos');
 
@@ -49,7 +53,60 @@ let getArticle = (article_id) => {
 };
 
 // GET call to StackOverflow API
-router.get('/overflow', function(req, res) {
+router.get('/overflow', function (req, res, next) {
+    let url = 'https://api.stackexchange.com/2.2/tags?site=stackoverflow';
+    let headers = {'Accept-Encoding': 'gzip'};
+
+    let options = {
+        qs: {
+            fromdate: '1498262400',
+            todate: '1498348800',
+            order: 'desc',
+            sort: 'popular',
+            site: 'stackoverflow',
+            key: 'uBIHkVmbVkHq6MNChKnpGQ(('
+        }
+    };
+
+    console.log("SENDING REQ")
+
+    rq.get({url: url, 'headers': headers})
+        .pipe(zlib.createGunzip())
+        .pipe(bod=process.stdout);
+
+    const chunks = [];
+    req.on("data", function (chunk) {
+        chunks.push(chunk);
+    });
+
+
+    req.on("end", function () {
+        let body = Buffer.concat(chunks);
+        res.send(body);
+    });
+
+
+
+    console.log("RECEIVED REQ")
+
+    // let bod = process.stdout;
+    //console.log("TSTING", bod);
+    // res.send(util.inspect(bod));
+
+        // then(function (body) {
+        //     let response = body.toString();
+        //     // let response = JSON.parse(body.toString());
+        //
+        //     console.log(response); // JSON body returned from get request to API
+        //     res.send(response)
+        // })
+        // .catch(function (err) {
+        //     console.log('failed');
+        // })
+});
+
+// GET call to StackOverflow API
+router.get('/overflows', function(req, res) {
     let options = {
         // uri: 'https://api.stackexchange.com/2.2/tags?fromdate=1498262400&todate=1498348800&order=desc&sort=popular&site=stackoverflow&key=uBIHkVmbVkHq6MNChKnpGQ((',
         uri: 'https://api.stackexchange.com/2.2/tags',
@@ -95,7 +152,7 @@ let generate_query = (tags) => {
 // GET call to github API
 router.get('/github', function(req, res) {
     let options = {
-        uri: 'https://api.github.com/search/repositories?q=topic:ruby+',
+        uri: 'https://api.github.com/search/repositories?q=topic:graphite-carbon',
         // qs concatenating format doesn't work for this format of query
         qs: {
             // 'topic': 'ruby'
@@ -113,10 +170,11 @@ router.get('/github', function(req, res) {
             // save to DB
             let top_repos = []; // list of repos to be sent to front end for display
             for (i = 0; i < 5; i++) {
-                top_repos.push(body['items'][i]) // push repos in list items
+                top_repos.push(body['items'][i]); // push repos in list items
                 console.log('pushed'); // pushing before finish - add callback
             }
             // save to database
+            
             res.send(top_repos) // new route to load top repos
         })
         .catch(function(err) {

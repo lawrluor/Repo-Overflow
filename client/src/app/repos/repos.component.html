@@ -1,12 +1,29 @@
 <div class = "container">
+  <h1><b>Repo-Overflow</b></h1>
+  <p class="col-md-9">Displays Github repositories related to daily trending topics on Stack Overflow</p>
+  <p class="col-md-3"><a href="/auth/provider"><b>Log In with OAuth 2.0 Provider</b></a></p>
+
+  <br>
+  <br>
+  <br>
+
+  <div class="col-md-3"><b>User</b></div>
+  <div class="col-md-3"><b>Repo Name</b></div>
+  <div class="col-md-3"><b>Description</b></div>
+  <div class="col-md-3"><b>URL</b></div>
+  <hr>
+
   <div *ngFor = "let repo of repos"> <!-- iterate through using Angular directive -->
-    <div class = "col-md-3">
+    <div class="col-md-3">
+      <img src={{repo.avatar}} alt="Owner Avatar" height="42" width="42">
+    </div>
+    <div class="col-md-3">
       {{repo.name}}
     </div>
-    <div class = "col-md-3">
+    <div class="col-md-3">
       {{repo.description}}
     </div>
-    <div class = "col-md-3">
+    <div class="col-md-3">
       {{repo.url}}
     </div>
   </div>

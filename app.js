@@ -19,11 +19,37 @@ mongoose.connection.on('error', ()=>{
 
 // Register Middleware
 app.use(cors());
-app.use(bodyparser.json());
+// app.use(bodyparser.json());
+
+// Middleware for Express and Passport Session
+app.use(require('cookie-parser')());
+app.use(require('body-parser').urlencoded({ extended: true }));
+app.use(require('express-session')({
+    secret: 'keyboard cat',
+    resave: true,
+    saveUninitialized: true
+}));
+
+let passport = require('passport'); // for OAuth authentication
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser(function(user, done) {
+    // placeholder for custom user serialization
+    // null is for errors
+    done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+    // placeholder for custom user deserialization.
+    // maybe you are going to get the user from mongo by id?
+    // null is for errors
+    done(null, user);
+});
 
 // Register routes
-const api = require('./routes/api');
-app.use('/api', api);
+app.use('/api', require('./routes/api'));
+app.use('/auth', require('./routes/auth'));
 
 app.listen(3000, ()=>{
     console.log('Server started at port:' + 3000);

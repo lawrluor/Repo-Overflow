@@ -10,10 +10,15 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.17.1",
+    "cookie-parser": "^1.4.3",
     "cors": "^2.8.1",
     "express": "^4.15.2",
+    "express-session": "^1.15.3",
     "mongoose": "^4.9.2",
+    "passport": "^0.3.2",
+    "passport-github": "^1.1.0",
     "request": "^2.81.0",
-    "request-promise": "^4.2.1"
+    "request-promise": "^4.2.1",
+    "zlib": "^1.0.5"
   }
 }
