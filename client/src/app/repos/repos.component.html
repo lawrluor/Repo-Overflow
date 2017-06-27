@@ -1,0 +1,13 @@
+<div class = "container">
+  <div *ngFor = "let repo of repos"> <!-- iterate through using Angular directive -->
+    <div class = "col-md-3">
+      {{repo.name}}
+    </div>
+    <div class = "col-md-3">
+      {{repo.description}}
+    </div>
+    <div class = "col-md-3">
+      {{repo.url}}
+    </div>
+  </div>
+</div>
