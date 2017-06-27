@@ -55,9 +55,10 @@ passport.use(new GithubStrategy({
 router.get('/github', passport.authenticate('github'));
 
 // GitHub will call this URL after authentication
-router.get('/github/callback', passport.authenticate('github', { failureRedirect: '/auth' }),
+router.get('/github/callback', passport.authenticate('github', { failureRedirect: '/' }),
     function(req, res) {
-        res.redirect('/');
+        res.redirect('http://localhost:4200');
+        alert(req.user + 'is now logged in');
     }
 );
 

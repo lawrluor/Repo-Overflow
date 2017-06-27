@@ -8,6 +8,7 @@ let util = require('util');
 let stream = require('stream');
 
 let Repo = require('../models/repos');
+let Tag = require('../models/tags')
 
 // GET related repositories from previous days from Mongo database
 router.get('/repositories', function(req, res, next) {
@@ -54,6 +55,33 @@ let getArticle = (article_id) => {
 
 // GET call to StackOverflow API
 router.get('/overflow', function (req, res, next) {
+    let url = 'https://api.stackexchange.com/2.2/tags?site=stackoverflow';
+    let options = {
+        qs: {
+            fromdate: '1498262400',
+            todate: '1498348800',
+            order: 'desc',
+            sort: 'popular',
+            site: 'stackoverflow',
+            key: 'uBIHkVmbVkHq6MNChKnpGQ(('
+        },
+        headers: {'Accept-Encoding': 'gzip'}
+    };
+    request(options)
+        .then(function(body) {
+            console.log(body);
+            for (i = 0; i < 5; i++) {
+                let current_item = body['items'][i];
+                saveTag(current_item);
+            }
+        })
+        .catch(function(err) {
+            console.log('Saved Tags');
+        });
+});
+
+// GET call to StackOverflow API - version Z
+router.get('/overflowz', function (req, res, next) {
     let url = 'https://api.stackexchange.com/2.2/tags?site=stackoverflow';
     let headers = {'Accept-Encoding': 'gzip'};
 
@@ -105,7 +133,7 @@ router.get('/overflow', function (req, res, next) {
         // })
 });
 
-// GET call to StackOverflow API
+// GET call to StackOverflow API - version S
 router.get('/overflows', function(req, res) {
     let options = {
         // uri: 'https://api.stackexchange.com/2.2/tags?fromdate=1498262400&todate=1498348800&order=desc&sort=popular&site=stackoverflow&key=uBIHkVmbVkHq6MNChKnpGQ((',
@@ -149,15 +177,55 @@ let generate_query = (tags) => {
     return queryString;
 };
 
+// Helper function that takes a JSON object representing a Tag and saves it to the database
+let saveTag = (obj) => {
+    newTag = new Tag();
+    newTag.name = obj['name'];
+    newTag.count = obj['count'];
+    newTag.save(function() {
+        console.log("Saved Tag: " + newTag.name);
+    });
+};
+
+// Helper function that takes a JSON object representing a Repo and saves it to the database
+let saveRepo = (obj) => {
+    let newRepo = new Repo();
+    newRepo.repo_id = obj['repo_id'];
+    newRepo.name = obj['name'];
+    newRepo.url = obj['url'];
+    newRepo.description = obj['description'];
+    newRepo.owner = obj['owner']['login'];
+    newRepo.avatar = obj['owner']['avatar_url'];
+    newRepo.save(function() {
+        console.log("Saved Repo: " + newRepo.name);
+    });
+};
+
+// GET all Tags from database
+let getTags = () => {
+    Tag.find(function(err, tags){
+        console.log(tags);
+        return tags;
+    });
+};
+
+router.get('/tags', function(req, res) {
+    let tags = getTags();
+    res.json(tags);
+});
+
 // GET call to github API
 router.get('/github', function(req, res) {
+    // let tags = /overflow
+    // let top_tag = tags[0]
+
+    // Get Tags from db (temporarily)
+
     let options = {
-        uri: 'https://api.github.com/search/repositories?q=topic:graphite-carbon',
-        // qs concatenating format doesn't work for this format of query
-        qs: {
-            // 'topic': 'ruby'
-            //     access_token: '8eb8fbcfc2238ddefbddc57d11e6b4137649fc1e', // -> uri + '?access_token=xxxxx%20xxxxx'
-        },
+        uri: 'https://api.github.com/search/repositories?q=topic:' + tags[0],
+        //uri: 'https://api.github.com/search/repositories',
+        // qs concatenating format doesn't work for this format of query because it adds a '?' char for each query
+        qs: {},
         headers: {'User-Agent': 'Request-Promise'},
         json: true // Automatically parses the JSON string in the response; no need to use JSON.parse(body)
     };
@@ -170,17 +238,20 @@ router.get('/github', function(req, res) {
             // save to DB
             let top_repos = []; // list of repos to be sent to front end for display
             for (i = 0; i < 5; i++) {
-                top_repos.push(body['items'][i]); // push repos in list items
+                current_item = body['items'][i];
+                top_repos.push(current_item); // push repos in list items
                 console.log('pushed'); // pushing before finish - add callback
+
+                // save to database
+                saveRepo(current_item);
+
             }
-            // save to database
-            
             res.send(top_repos) // new route to load top repos
         })
-        .catch(function(err) {
-            // If any of the above fails, go here
-            console.log('failed');
-        });
+        // .catch(function(err) {
+        //     // If any of the above fails, go here
+        //     console.log('failed');
+        // });
 
     // let Token = "8eb8fbcfc2238ddefbddc57d11e6b4137649fc1e";
     // let githubAPI = "https://api.github.com/users/lawrluor";
