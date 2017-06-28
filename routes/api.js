@@ -3,7 +3,6 @@ let router = express.Router();
 let request = require('request-promise'); // using request-promise module
 let mongoose = require('mongoose');
 let zlib = require('zlib');
-let util = require('util');
 let stream = require('stream');
 
 let Repo = require('../models/repos'); // import Repo schema
@@ -16,40 +15,62 @@ router.get('/repositories', function(req, res, next) {
     });
 });
 
+// Helper function for /overflow
+let overflowGet = () => {
+  // Fill this method with all functionality of /overflow, then have /overflow call this method
+};
+
+// Helper function to get date window for /overflow. Queries for top results between current time and 1 day before
+let getDate = () => {
+    // Calculate date: Stack Overflow counts time in seconds (from the standard Jan 1, 1970). getTime counts milliseconds
+    // Overflow: https:/api.stackexchange.com//2.2/tags?fromdate=1498521600&todate=1498608000&order=desc&sort=popular&site=stackoverflow
+    // getTime() https://api.stackexchange.com/2.2/tags?fromdate=1498573451962&todate=1498659851962&order=desc&sort=popular&site=stackoverflow
+
+    let d = new Date();
+    current_date = Math.trunc((d.getTime() / 1000)); // convert from milliseconds to seconds
+    previous_date = current_date - 86400;
+    dates = {'previous_date': previous_date, 'current_date': current_date}
+    console.log("dates:", dates);
+    return dates
+};
+
 // GET call to StackOverflow API to grab tags
 router.get('/overflow', function(req, res, next) {
+    let dates = getDate(); // call to helper function to get dates for query windows. TODO: set up promise from getDate
     let reqData = {
         url: "https://api.stackexchange.com/2.2/tags?site=stackoverflow",
-        headers: {'Accept-Encoding': 'gzip'}
-        // qs: {
-        //     fromdate: '1498262400',
-        //     todate: '1498348800',
-        //     order: 'desc',
-        //     sort: 'popular',
-        //     site: 'stackoverflow',
-        //     key: 'uBIHkVmbVkHq6MNChKnpGQ(('
+        headers: {'Accept-Encoding': 'gzip'},
+        qs: {
+            fromdate: dates.previous_date, // dates.previous_date
+            todate: dates.current_date, // dates.current_date
+            order: 'desc',
+            sort: 'popular',
+            site: 'stackoverflow',
+            key: 'uBIHkVmbVkHq6MNChKnpGQ(('
+        }
     };
 
     // Data from Stack Overflow API is chunked. Intercept the data stream chunks and aggregate the body piece by piece
     // Adapted from https://stackoverflow.com/questions/27386119/http-request-to-stackexchange-api-returns-unreadable-json?rq=1
     let gunzip = zlib.createGunzip();
     let body = "";
-    gunzip.on('data', function(data){
+    gunzip.on('data', function (data) {
         body += data.toString();
     });
-    gunzip.on('end', function(){
+    gunzip.on('end', function () {
         body = JSON.parse(body);
-
         // DO THINGS WITH THE BODY
-        console.log(body);
         res.send(body);
     });
     request(reqData)
         .pipe(gunzip);
+    // End functionality:
+    // let body = overflowGet();
+    // res.json(body);
 });
 
 // GET call to StackOverflow API
-router.get('/overflow_reference', function (req, res, next) {
+router.get('/overflow_reference', function(req, res, next) {
     let url = 'https://api.stackexchange.com/2.2/tags?site=stackoverflow';
     let options = {
         qs: {
@@ -102,7 +123,7 @@ router.get('/github', function(req, res) {
                 console.log('pushed'); // pushing before finish - add callback
 
                 // save to database
-                saveRepo(current_item);
+                // saveRepo(current_item);
 
             }
             res.send(top_repos) // new route to load top repos

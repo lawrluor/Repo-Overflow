@@ -23,7 +23,7 @@ export class ReposComponent implements OnInit {
 
   // retrieve Repo data from api/repositories - called each time browser is loaded
   ngOnInit() {
-    this.repoService.getRepos()
+    this.repoService.getRepos() // repoService in repo.service.ts calls localhost:3000/api/repositories for data
       .subscribe(repos => this.repos = repos);
   }
 
