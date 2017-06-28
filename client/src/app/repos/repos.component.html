@@ -23,7 +23,7 @@
     </tr>
 
     <tr *ngFor = "let repo of repos"> <!-- iterate through using Angular directive -->
-      <td class="col-md-1"><img src={{repo.avatar}} alt="Owner Avatar" height="42" width="42"></td>
+      <td class="col-md-1"><img src={{repo.avatar}} alt="Owner Avatar" height="32" width="32"></td>
       <td class="col-md-2">{{repo.owner}}</td>
       <td class="col-md-3"><a href={{repo.url}}>{{repo.name}}</a></td>
       <td class="col-md-6">{{repo.description}}</td>

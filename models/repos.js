@@ -1,6 +1,5 @@
 let mongoose = require('mongoose');
 
-// Create the movieSchema.
 let RepoSchema = mongoose.Schema({
     repo_id:  Number, // item['id']
     name: String, // item['name']

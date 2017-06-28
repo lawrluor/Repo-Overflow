@@ -2,6 +2,7 @@ let express = require('express');
 let mongoose = require('mongoose');
 let bodyparser = require('body-parser');
 let cors = require('cors');
+let passport = require('passport'); // for OAuth authentication
 
 // Register App
 let app = express();
@@ -19,7 +20,7 @@ mongoose.connection.on('error', ()=>{
 
 // Register Middleware
 app.use(cors());
-// app.use(bodyparser.json());
+app.use(bodyparser.json());
 
 // Middleware for Express and Passport Session
 app.use(require('cookie-parser')());
@@ -30,22 +31,8 @@ app.use(require('express-session')({
     saveUninitialized: true
 }));
 
-let passport = require('passport'); // for OAuth authentication
 app.use(passport.initialize());
 app.use(passport.session());
-
-passport.serializeUser(function(user, done) {
-    // placeholder for custom user serialization
-    // null is for errors
-    done(null, user);
-});
-
-passport.deserializeUser(function(user, done) {
-    // placeholder for custom user deserialization.
-    // maybe you are going to get the user from mongo by id?
-    // null is for errors
-    done(null, user);
-});
 
 // Register routes
 app.use('/api', require('./routes/api'));

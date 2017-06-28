@@ -1,6 +1,5 @@
 let mongoose = require('mongoose');
 
-// Create the movieSchema.
 let TagSchema = mongoose.Schema({
     name: String, // item['name']
     count: Number // item['count']

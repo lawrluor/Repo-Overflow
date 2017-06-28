@@ -1,29 +1,13 @@
 let express = require('express');
 let router = express.Router();
 
-let app = express();
+let User = require('../models/users'); // import User schema
 
-// // Middleware for Express and Passport Session
-// app.use(require('cookie-parser')());
-// app.use(require('body-parser').urlencoded({ extended: true }));
-// app.use(require('express-session')({
-//     secret: 'keyboard cat',
-//     resave: true,
-//     saveUninitialized: true
-// }));
-//
-
-let passport = require('passport'); // for OAuth authentication
-// app.use(passport.initialize());
-// app.use(passport.session());
-
-
-// User authentication
 // Authentication: main menu route
-router.get('/', function (req, res) {
+router.get('/', function(req, res) {
     let html = "<ul>\
-    <li><a href='/auth/github'>GitHub</a></li>\
-    <li><a href='/auth/logout'>logout</a></li>\
+    <li><a href='http://localhost:3000/auth/github'>GitHub</a></li>\
+    <li><a href='http://localhost:3000/auth/logout'>logout</a></li>\
   </ul>";
 
     // dump the user for debugging
@@ -40,27 +24,65 @@ router.get('/logout', function(req, res){
     res.redirect('/auth');
 });
 
-let GithubStrategy = require('passport-github').Strategy;
-passport.use(new GithubStrategy({
-        clientID: "32b333ed43fccdfeedce",
-        clientSecret: "d8ce6ad33907334c946c8bdac08e9820f3473330",
+let passport = require('passport'); // for OAuth authentication
+let GitHubStrategy = require('passport-github').Strategy;
+
+passport.use(new GitHubStrategy({
+        clientID: "32b333ed43fccdfeedce", //GITHUB_CLIENT_ID
+        clientSecret: "d8ce6ad33907334c946c8bdac08e9820f3473330", // GITHUB_CLIENT_SECRET,
         callbackURL: "http://localhost:3000/auth/github/callback"
     },
-    function(accessToken, refreshToken, profile, done) {
-        return done(null, profile);
+    function(accessToken, refreshToken, profile, cb) {
+        // check user table for anyone with a github ID of profile.id
+        User.findOne({ githubId: profile.id }, function (err, user) {
+            if (err) {
+                return cb(err);
+            }
+
+            // If no user found, create new user with profile values from Github
+            if (!user) {
+                user = new User({
+                    githubId: profile.id,
+                    name: profile.displayName,
+                    email: profile.emails[0].value,
+                    username: profile.username,
+                    provider: 'github',
+                    // accessToken: String
+                    // github: profile._json, // saves entire user profile - searching on User.findOne({'github.id': profile.id } will now match
+                });
+                user.save(function(err) {
+                    if (err) console.log(err);
+                    return cb(err, user);
+                });
+            } else {
+                // found user in database, return
+                return cb(err, user);
+            }
+        });
     }
 ));
 
-// we will call this to start the GitHub Login process
-router.get('/github', passport.authenticate('github'));
+passport.serializeUser(function(user, done) {
+    // placeholder for custom user serialization
+    // null is for errors
+    done(null, user);
+});
 
-// GitHub will call this URL after authentication
-router.get('/github/callback', passport.authenticate('github', { failureRedirect: '/' }),
+passport.deserializeUser(function(user, done) {
+    // placeholder for custom user deserialization.
+    // maybe you are going to get the user from mongo by id?
+    // null is for errors
+    done(null, user);
+});
+
+router.get('/github',
+    passport.authenticate('github'));
+
+router.get('/github/callback',
+    passport.authenticate('github', { failureRedirect: '/login' }),
     function(req, res) {
-        res.redirect('http://localhost:4200');
-        alert(req.user + 'is now logged in');
-    }
-);
-
+        // Successful authentication, redirect home.
+        res.redirect('http://localhost:3000/auth');
+    });
 
 module.exports = router;
