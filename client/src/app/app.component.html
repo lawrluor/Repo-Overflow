@@ -1,1 +1,14 @@
-<app-repos></app-repos>
+<!-- Host "base" template -->
+<h1><b>Repo-Overflow</b></h1>
+<p class="col-md-9">Displays Github repositories related to daily trending topics on Stack Overflow</p>
+<a class="col-md-3" href="http://localhost:3000/auth"><button>Log In with Github (OAuth 2.0)</button></a>
+
+<!-- Create nav bar to display available routes -->
+<nav>
+  <a routerLink="/repositories" routerLinkActive="active">Repositories</a>
+  <a routerLink="/tags" routerLinkActive="active">Tags</a>
+</nav>
+
+<!-- the router matches browser URL to respective route path -->
+<!-- displays Component after/underneath RouterOutlet placed in the host view's (app.component.html) HTML. -->
+<router-outlet></router-outlet>
