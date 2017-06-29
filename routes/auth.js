@@ -7,6 +7,12 @@ let Repo = require('../models/repos'); // import Repo schema, representing a Git
 let passport = require('passport'); // for OAuth authentication
 let GitHubStrategy = require('passport-github').Strategy;
 
+/* AUTHENTICATION
+** Handled using passport and passport-github modules
+** Users log in via their Github accounts
+** User profile info is collected and stored in database collection repo_overflow.users
+*/
+
 // Create Github Strategy using passport-github
 passport.use(new GitHubStrategy({
         clientID: "32b333ed43fccdfeedce", //GITHUB_CLIENT_ID

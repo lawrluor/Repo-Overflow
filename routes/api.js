@@ -9,7 +9,11 @@ let zlib = require('zlib');
 let Repo = require('../models/repos'); // import Repo schema, representing a Github repository
 let Tag = require('../models/tags'); // import Tag schema, representing a Stack Overflow topic tag
 
-/* MAIN FUNCTIONALITY: Displays repositories related to the most popular Stack Overflow tags */
+/* REPOSITORIES ROUTE: Displays repositories related to the most popular Stack Overflow tags
+** Routes: front-end: http://localhost:4200/repositories, linked to back-end (routes/api.js): http://localhost:3000/api/repositories
+** 1. Call to Stack Overflow API to get top tag to query in Github
+** 2. Display Github query results as list on front end
+**/
 router.get('/repositories', function(req, res) {
     let overflow_promise = overflowGet(); // call to helper function to return last 24 hours' most popular Stack Overflow tags
     overflow_promise.then(function(body) {
@@ -126,17 +130,26 @@ function ensureAuthenticated(req, res, next) {
     res.redirect('http://localhost:3000/auth/github')
 }
 
-// Protected route - user must be logged in to view this
-// This route will display popular repositories from previous days
+/* ARCHIVE - Protected Route
+ ** The archive displays popular Github repositories from previous days from the database.
+ ** You must be logged in to view this route; it is protected by ensureAuthenticated function
+ ** Routes: front-end: http://localhost:4200/archive, linked to back-end (routes/api.js): http://localhost:3000/api/archive
+ ** 1. Call Mongo database to get list of all repositories in database
+ ** 2. Display all repositories as list of Repo objects on front end
+ */
 router.get('/archive', ensureAuthenticated, function(req, res) {
     console.log("Access granted. Welcome to the Archive");
     Repo.find(function(err, repos){
         res.json(repos);
     });
+
+
 });
 
 
-/* TEST ROUTES FOR APIS: Stack Overflow and Github */
+/* TEST ROUTES FOR APIS: Stack Overflow and Github
+** Feel free to ignore these routes
+*/
 
 // GET call to StackOverflow API to grab tags
 router.get('/overflow', function(req, res, next) {

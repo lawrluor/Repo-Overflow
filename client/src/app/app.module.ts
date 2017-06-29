@@ -11,7 +11,7 @@ import { ArchiveComponent } from './archive/archive.component';
 // Reference: https://angular.io/guide/router
 const appRoutes: Routes = [
   { path: 'repositories', component: ReposComponent },
-  { path: 'auth/archive', component: ArchiveComponent },
+  { path: 'archive', component: ArchiveComponent },
   // {
   //   path: 'heroes',
   //   component: HeroListComponent,
