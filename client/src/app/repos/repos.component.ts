@@ -12,7 +12,7 @@ import { Repo } from '../repo'; // import Repo Schema
 export class ReposComponent implements OnInit {
   // declare vars
   repos: Repo[]; // array of Repo objects
-  repo: Repo;
+  repo: Repo; // Repo schema
   name: string;
   url: string;
   description: string;
