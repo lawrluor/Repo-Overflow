@@ -4,6 +4,7 @@ let request = require('request-promise'); // using request-promise module
 let mongoose = require('mongoose');
 let zlib = require('zlib');
 let stream = require('stream');
+let ensureAuthenticated = require('./auth')
 
 let Repo = require('../models/repos'); // import Repo schema
 let Tag = require('../models/tags'); // import Tag schema
@@ -15,86 +16,81 @@ router.get('/repositories', function(req, res, next) {
     });
 });
 
-// Helper function for /overflow
+// Helper function for /overflow. returns top Tags as JSON body from StackOverflow API from the last 24 hours
 let overflowGet = () => {
-  // Fill this method with all functionality of /overflow, then have /overflow call this method
+    return new Promise((resolve, reject) => {
+        let date_promise = getDate(); // resolved Promise
+        console.log("date_promise", date_promise);
+        date_promise.then(function(dates) { // extract value from date_promise, execute rest of function
+            let reqData = {
+                url: "https://api.stackexchange.com/2.2/tags?site=stackoverflow",
+                headers: {'Accept-Encoding': 'gzip'},
+                qs: {
+                    fromdate: dates.previous_date, // dates.previous_date
+                    todate: dates.current_date, // dates.current_date
+                    order: 'desc',
+                    sort: 'popular',
+                    site: 'stackoverflow',
+                    key: 'uBIHkVmbVkHq6MNChKnpGQ(('
+                }
+            };
+
+            // Data from Stack Overflow API is chunked. Intercept the data stream chunks and aggregate the body piece by piece
+            // Adapted from https://stackoverflow.com/questions/27386119/http-request-to-stackexchange-api-returns-unreadable-json?rq=1
+            let gunzip = zlib.createGunzip();
+            let body = "";
+            gunzip.on('data', function (data) {
+                body += data.toString();
+            });
+            gunzip.on('end', function () {
+                body = JSON.parse(body);
+                if (body) {
+                    resolve(body);
+                } else {
+                    reject("error");
+                }
+            });
+            request(reqData)
+                .pipe(gunzip);
+            // End functionality:
+            // let body = overflowGet();
+            // res.json(body);
+        });
+    });
 };
+
+// Helper function to check if dictionary object is empty
+function isEmpty(obj) {
+    return Object.keys(obj).length===0;
+}
 
 // Helper function to get date window for /overflow. Queries for top results between current time and 1 day before
 let getDate = () => {
     // Calculate date: Stack Overflow counts time in seconds (from the standard Jan 1, 1970). getTime counts milliseconds
     // Overflow: https:/api.stackexchange.com//2.2/tags?fromdate=1498521600&todate=1498608000&order=desc&sort=popular&site=stackoverflow
     // getTime() https://api.stackexchange.com/2.2/tags?fromdate=1498573451962&todate=1498659851962&order=desc&sort=popular&site=stackoverflow
-
-    let d = new Date();
-    current_date = Math.trunc((d.getTime() / 1000)); // convert from milliseconds to seconds
-    previous_date = current_date - 86400;
-    dates = {'previous_date': previous_date, 'current_date': current_date}
-    console.log("dates:", dates);
-    return dates
+    return new Promise((resolve, reject) => {
+        let d = new Date();
+        let current_date = Math.trunc((d.getTime() / 1000)); // convert from milliseconds to seconds
+        let previous_date = current_date - 86400;
+        let dates = {'previous_date': previous_date, 'current_date': current_date};
+        if (!isEmpty(dates)) {
+            resolve(dates);
+        } else {
+            reject("error");
+        }
+    });
 };
 
 // GET call to StackOverflow API to grab tags
 router.get('/overflow', function(req, res, next) {
-    let dates = getDate(); // call to helper function to get dates for query windows. TODO: set up promise from getDate
-    let reqData = {
-        url: "https://api.stackexchange.com/2.2/tags?site=stackoverflow",
-        headers: {'Accept-Encoding': 'gzip'},
-        qs: {
-            fromdate: dates.previous_date, // dates.previous_date
-            todate: dates.current_date, // dates.current_date
-            order: 'desc',
-            sort: 'popular',
-            site: 'stackoverflow',
-            key: 'uBIHkVmbVkHq6MNChKnpGQ(('
-        }
-    };
-
-    // Data from Stack Overflow API is chunked. Intercept the data stream chunks and aggregate the body piece by piece
-    // Adapted from https://stackoverflow.com/questions/27386119/http-request-to-stackexchange-api-returns-unreadable-json?rq=1
-    let gunzip = zlib.createGunzip();
-    let body = "";
-    gunzip.on('data', function (data) {
-        body += data.toString();
+    let api_promise = overflowGet(); // call to helper function to get JSON body
+    console.log("api_promise:", api_promise);
+    api_promise.then(function(body) {
+        res.json(body);
     });
-    gunzip.on('end', function () {
-        body = JSON.parse(body);
-        // DO THINGS WITH THE BODY
-        res.send(body);
-    });
-    request(reqData)
-        .pipe(gunzip);
-    // End functionality:
-    // let body = overflowGet();
-    // res.json(body);
 });
 
-// GET call to StackOverflow API
-router.get('/overflow_reference', function(req, res, next) {
-    let url = 'https://api.stackexchange.com/2.2/tags?site=stackoverflow';
-    let options = {
-        qs: {
-            fromdate: '1498262400',
-            todate: '1498348800',
-            order: 'desc',
-            sort: 'popular',
-            site: 'stackoverflow',
-            key: 'uBIHkVmbVkHq6MNChKnpGQ(('
-        },
-        headers: {'Accept-Encoding': 'gzip'}
-    };
-    request(options)
-        .then(function(body) {
-            console.log(body);
-            for (i = 0; i < 5; i++) {
-                let current_item = body['items'][i];
-                saveTag(current_item);
-            }
-        })
-        .catch(function(err) {
-            console.log('Saved Tags');
-        });
-});
 
 // GET call to github API
 router.get('/github', function(req, res) {

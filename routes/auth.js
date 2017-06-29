@@ -3,25 +3,10 @@ let router = express.Router();
 
 let User = require('../models/users'); // import User schema
 
-// Authentication: main menu route
-router.get('/', function(req, res) {
-    let html = "<ul>\
-    <li><a href='http://localhost:3000/auth/github'>GitHub</a></li>\
-    <li><a href='http://localhost:3000/auth/logout'>logout</a></li>\
-  </ul>";
-
-    // dump the user for debugging
-    if (req.isAuthenticated()) {
-        html += "<p>authenticated as user:</p>"
-        html += "<pre>" + JSON.stringify(req.user, null, 4) + "</pre>";
-    }
-    res.send(html);
-});
-
 router.get('/logout', function(req, res){
     console.log('logging out');
     req.logout();
-    res.redirect('/auth');
+    res.redirect('http://localhost:4200/');
 });
 
 let passport = require('passport'); // for OAuth authentication
@@ -84,5 +69,39 @@ router.get('/github/callback',
         // Successful authentication, redirect home.
         res.redirect('http://localhost:4200/');
     });
+
+// Middleware to ensure user is authenticated to be used on any resource that needs to be protected.
+// If the request is authenticated (typically via a persistent login session), request will proceed.
+// Otherwise, the user will be redirected to the login page.
+function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        // req.user is available for use here
+        console.log('user logged in');
+        return next(); }
+
+    // denied. redirect to login
+    console.log('user not logged in');
+    res.redirect('http://localhost:3000/auth/github')
+}
+
+// PROTECTED ROUTE
+router.get('/archive', ensureAuthenticated, function(req, res) {
+    res.send("Access granted. Welcome to the Archive");
+});
+
+// Authentication: main menu route
+// router.get('/', function(req, res) {
+//     let html = "<ul>\
+//     <li><a href='http://localhost:3000/auth/github'>GitHub</a></li>\
+//     <li><a href='http://localhost:3000/auth/logout'>logout</a></li>\
+//   </ul>";
+//
+//     // dump the user for debugging
+//     if (req.isAuthenticated()) {
+//         html += "<p>authenticated as user:</p>"
+//         html += "<pre>" + JSON.stringify(req.user, null, 4) + "</pre>";
+//     }
+//     res.send(html);
+// });
 
 module.exports = router;

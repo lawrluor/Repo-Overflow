@@ -10,13 +10,14 @@ import { Repo } from '../repo'; // import Repo Schema
   providers: [ArchiveService, RepoService] // registers service for use
 })
 export class ArchiveComponent implements OnInit {
+  message = '';
 
   // dependency injection: provide service
   constructor(private archiveService: ArchiveService) { }
 
   // retrieve Repo data from api/repositories - called each time browser is loaded
   ngOnInit() {
-    this.archiveService.getArchive();
-      // .subscribe(repos => this.repos = repos);
+    this.archiveService.getArchive()
+      .subscribe(message => this.message = message);
   }
 }
