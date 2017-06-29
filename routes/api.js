@@ -10,7 +10,7 @@ let Repo = require('../models/repos'); // import Repo schema
 let Tag = require('../models/tags'); // import Tag schema
 
 // GET related repositories from previous days from Mongo database
-router.get('/repositories', function(req, res, next) {
+router.get('/archived_repositories', function(req, res, next) {
     Repo.find(function(err, repos){
         res.json(repos);
     });
@@ -91,6 +91,36 @@ router.get('/overflow', function(req, res, next) {
     });
 });
 
+router.get('/repositories', function(req, res) {
+    let overflow_promise = overflowGet();
+    overflow_promise.then(function(body) {
+        top_tag = body['items'][1]['name'];
+        console.log(top_tag);
+
+        let options = {
+            uri: 'https://api.github.com/search/repositories?q=topic:' + top_tag,
+            qs: {}, // qs concatenating format doesn't work for this format of query because it adds a '?' char for each query
+            headers: {'User-Agent': 'Request-Promise'},
+            json: true // Automatically parses the JSON string in the response; no need to use JSON.parse(body)
+        };
+
+        request(options)
+            .then(function (body) {
+                console.log("body", body['items']); // may be empty if no related repos related to the top tag are found from searching Github
+                if (body.length===0) {
+                    console.log('body is empty');
+                } else {
+                    console.log('body not empty');
+                }
+                let top_repos = []; // list of repos to be sent to front end for display
+                for (i = 0; i < 5; i++) {
+                    current_item = body['items'][i];
+                    top_repos.push(current_item); // push repos in list items
+                }
+                res.send(top_repos) // new route to load top repos
+            });
+    });
+});
 
 // GET call to github API
 router.get('/github', function(req, res) {
