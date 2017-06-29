@@ -112,6 +112,29 @@ function isEmpty(obj) {
     return Object.keys(obj).length===0;
 }
 
+// Middleware to ensure user is authenticated to be used on any resource that needs to be protected.
+// If the request is authenticated (typically via a persistent login session), request will proceed.
+// Otherwise, the user will be redirected to the login page.
+function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) { // req.user is available for use here
+        console.log('user logged in');
+        return next();
+    }
+
+    // Else: Access denied, Redirect to login
+    console.log('user not logged in');
+    res.redirect('http://localhost:3000/auth/github')
+}
+
+// Protected route - user must be logged in to view this
+// This route will display popular repositories from previous days
+router.get('/archive', ensureAuthenticated, function(req, res) {
+    console.log("Access granted. Welcome to the Archive");
+    Repo.find(function(err, repos){
+        res.json(repos);
+    });
+});
+
 
 /* TEST ROUTES FOR APIS: Stack Overflow and Github */
 

@@ -1,16 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { ArchiveService } from '../archive.service'; // import data manipulation service
-import { RepoService } from '../repo.service';
 import { Repo } from '../repo'; // import Repo Schema
 
 @Component({
   selector: 'app-archive',
   templateUrl: './archive.component.html',
   styleUrls: ['./archive.component.css'],
-  providers: [ArchiveService, RepoService] // registers service for use
+  providers: [ArchiveService] // registers service for use
 })
 export class ArchiveComponent implements OnInit {
-  message = '';
+  // declare Repo vars
+  repos: Repo[]; // array of Repo objects
+  repo: Repo; // Repo schema
+  name: string;
+  url: string;
+  description: string;
+  owner: string;
+  avatar: string;
 
   // dependency injection: provide service
   constructor(private archiveService: ArchiveService) { }
@@ -18,6 +24,6 @@ export class ArchiveComponent implements OnInit {
   // retrieve Repo data from api/repositories - called each time browser is loaded
   ngOnInit() {
     this.archiveService.getArchive()
-      .subscribe(message => this.message = message);
+      .subscribe(repos => this.repos = repos);
   }
 }

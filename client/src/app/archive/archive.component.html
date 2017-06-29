@@ -2,6 +2,7 @@
   <br>
   <br>
   <h1>Welcome to the Archive</h1>
+  <p>The archive displays popular Github repositories form previous days. You must be logged in to view this route. </p>
 
   <table>
     <tr>
@@ -18,11 +19,11 @@
       <td><hr></td>
     </tr>
 
-    <!--<tr *ngFor = "let repo of repos"> &lt;!&ndash; iterate through using Angular directive &ndash;&gt;-->
-    <!--<td class="col-md-1"><img src={{repo.avatar}} alt="Owner Avatar" height="32" width="32"></td>-->
-    <!--<td class="col-md-2">{{repo.owner}}</td>-->
-    <!--<td class="col-md-3"><a href={{repo.url}}>{{repo.name}}</a></td>-->
-    <!--<td class="col-md-6">{{repo.description}}</td>-->
-    <!--</tr>-->
+    <tr *ngFor = "let repo of repos"> <!-- iterate through using Angular directive -->
+    <td class="col-md-1"><img src={{repo.avatar}} alt="Owner Avatar" height="32" width="32"></td>
+    <td class="col-md-2">{{repo.owner}}</td>
+    <td class="col-md-3"><a href={{repo.url}}>{{repo.name}}</a></td>
+    <td class="col-md-6">{{repo.description}}</td>
+    </tr>
   </table>
 </div>

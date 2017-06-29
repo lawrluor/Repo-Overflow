@@ -10,7 +10,7 @@ export class ArchiveService {
 
   // get data from backend database by calling API using API url
   getArchive(){
-    return this.http.get('http://localhost:3000/auth/archive')
+    return this.http.get('http://localhost:3000/api/archive')
       .map(res => res.json()); // map to JSON format
   }
 

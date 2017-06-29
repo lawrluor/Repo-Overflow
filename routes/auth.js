@@ -2,6 +2,7 @@ let express = require('express');
 let router = express.Router();
 
 let User = require('../models/users'); // import User schema
+let Repo = require('../models/repos'); // import Repo schema, representing a Github repository
 
 let passport = require('passport'); // for OAuth authentication
 let GitHubStrategy = require('passport-github').Strategy;
@@ -73,26 +74,7 @@ router.get('/logout', function(req, res){
     res.redirect('http://localhost:4200/');
 });
 
-// Middleware to ensure user is authenticated to be used on any resource that needs to be protected.
-// If the request is authenticated (typically via a persistent login session), request will proceed.
-// Otherwise, the user will be redirected to the login page.
-function ensureAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) { // req.user is available for use here
-        console.log('user logged in');
-        return next();
-    }
-
-    // Else: Access denied, Redirect to login
-    console.log('user not logged in');
-    res.redirect('http://localhost:3000/auth/github')
-}
-
-// Protected route - user must be logged in to view this
-// This route will display popular repositories from previous days
-router.get('/archive', ensureAuthenticated, function(req, res) {
-    res.send("Access granted. Welcome to the Archive");
-});
-
+// Tutorial: https://www.jokecamp.com/tutorial-passportjs-authentication-in-nodejs/
 // Authentication: Backend "login menu" route
 // router.get('/', function(req, res) {
 //     let html = "<ul>\
